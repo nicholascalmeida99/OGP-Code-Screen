@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OGP Dashboard - Active Orders</title>
     <style>
-        body { font-family: 'Arial Black', sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 20px; box-sizing: border-box; padding-bottom: 70px; }
+        body { font-family: 'Arial Black', sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 20px; box-sizing: border-box; padding-bottom: 90px; }
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #0071dc; padding-bottom: 10px; margin-bottom: 20px; }
         header h1 { margin: 0; font-size: 2.5rem; text-transform: uppercase; }
         .text-blue { color: #0071dc; }
@@ -16,15 +16,21 @@
         .code-num { font-size: 2.5rem; color: #ffc220; }
         .btn-limpar { background: #ff4d4d; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; font-family: Arial, sans-serif; }
         
-        /* Estilo do Rodapé */
-        footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #222; border-top: 3px solid #444; padding: 10px 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; }
-        .footer-instruction { font-family: Arial, sans-serif; font-size: 0.95rem; color: #ff4d4d; font-weight: bold; max-width: 70%; }
-        .footer-wait-time { font-size: 1.3rem; font-weight: bold; text-transform: uppercase; padding-right: 40px; }
+        /* Novo estilo do Rodapé Centralizado com Linhas Laterais */
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1a1a1a; padding: 20px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
+        .wait-time-container { display: flex; align-items: center; width: 100%; justify-content: center; }
+        .wt-line { flex-grow: 1; height: 6px; border: none; margin: 0 20px; }
+        .footer-wait-time { font-size: 1.8rem; font-weight: bold; text-transform: uppercase; white-space: nowrap; letter-spacing: 1px; }
         
-        /* Cores dinâmicas do Wait Time */
-        .wt-green { color: #2ecc71; }
-        .wt-yellow { color: #ffc220; }
-        .wt-red { color: #e74c3c; }
+        /* Cores dinâmicas para todo o conjunto do Rodapé */
+        .status-green { color: #2ecc71; }
+        .status-green .wt-line { background-color: #2ecc71; }
+        
+        .status-yellow { color: #ffc220; }
+        .status-yellow .wt-line { background-color: #ffc220; }
+        
+        .status-red { color: #e74c3c; }
+        .status-red .wt-line { background-color: #e74c3c; }
     </style>
 </head>
 <body>
@@ -36,9 +42,13 @@
 
 <div class="grid-pedidos" id="painelPedidos"></div>
 
-<footer>
-    <div class="footer-instruction">Utilizar o código assim que a ordem estiver preparada e realizar o dispense para agilizar no wait time.</div>
-    <div class="footer-wait-time" id="waitTimeDisplay">Wait Time: <span id="wtValue">0.0</span> mins</div>
+<!-- Rodapé dinâmico com linhas expansíveis -->
+<footer id="footerContainer">
+    <div class="wait-time-container">
+        <div class="wt-line"></div>
+        <div class="footer-wait-time">Wait Time: <span id="wtValue">0.0</span> mins</div>
+        <div class="wt-line"></div>
+    </div>
 </footer>
 
 <script type="module">
@@ -65,15 +75,18 @@
     let firstLoad = true; 
     let audioCtx = null;
 
-    // Lógica para renderizar o Wait Time com a cor correta automaticamente
+    // Lógica para aplicar a cor idêntica no número e nas linhas laterais
     const wtValueSpan = document.getElementById('wtValue');
+    const footerContainer = document.getElementById('footerContainer');
+    
     wtValueSpan.innerText = currentWaitTime.toFixed(1);
+    
     if (currentWaitTime < 5) {
-        wtValueSpan.className = 'wt-green';
+        footerContainer.className = 'status-green';
     } else if (currentWaitTime === 5) {
-        wtValueSpan.className = 'wt-yellow';
+        footerContainer.className = 'status-yellow';
     } else {
-        wtValueSpan.className = 'wt-red';
+        footerContainer.className = 'status-red';
     }
 
     function activateAudioContext() {
@@ -106,7 +119,7 @@
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.4);
         } catch (e) {
-            console.log("Audio blocking check:", e);
+            console.log("Audio check:", e);
         }
     }
 
@@ -123,7 +136,7 @@
                 window.speechSynthesis.speak(utterance);
             }
         } catch (e) {
-            console.error("Text-to-speech error:", e);
+            console.error("TTS check error:", e);
         }
     }
 
