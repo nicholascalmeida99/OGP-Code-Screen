@@ -16,13 +16,13 @@
         .code-num { font-size: 2.5rem; color: #ffc220; }
         .btn-limpar { background: #ff4d4d; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; font-family: Arial, sans-serif; }
         
-        /* Novo estilo do Rodapé Centralizado com Linhas Laterais */
+        /* Rodapé Centralizado com Linhas Laterais */
         footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1a1a1a; padding: 20px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
         .wait-time-container { display: flex; align-items: center; width: 100%; justify-content: center; }
         .wt-line { flex-grow: 1; height: 6px; border: none; margin: 0 20px; }
         .footer-wait-time { font-size: 1.8rem; font-weight: bold; text-transform: uppercase; white-space: nowrap; letter-spacing: 1px; }
         
-        /* Cores dinâmicas para todo o conjunto do Rodapé */
+        /* Cores dinâmicas para o Rodapé */
         .status-green { color: #2ecc71; }
         .status-green .wt-line { background-color: #2ecc71; }
         
@@ -42,11 +42,10 @@
 
 <div class="grid-pedidos" id="painelPedidos"></div>
 
-<!-- Rodapé dinâmico com linhas expansíveis -->
 <footer id="footerContainer">
     <div class="wait-time-container">
         <div class="wt-line"></div>
-        <div class="footer-wait-time">Wait Time: <span id="wtValue">0.0</span> mins</div>
+        <div class="footer-wait-time">Wait Time: <span id="wtValue">--</span> mins</div>
         <div class="wt-line"></div>
     </div>
 </footer>
@@ -54,9 +53,6 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, query, orderBy, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    // 🔴 APENAS EDITE O NÚMERO ABAIXO PARA MUDAR O WAIT TIME NA TELA
-    const currentWaitTime = 4.9; 
 
     // Suas chaves oficiais do projeto walmart-ogp-code-screen
     const firebaseConfig = {
@@ -75,19 +71,28 @@
     let firstLoad = true; 
     let audioCtx = null;
 
-    // Lógica para aplicar a cor idêntica no número e nas linhas laterais
+    // ESCUTADOR EM TEMPO REAL DO WAIT TIME 
     const wtValueSpan = document.getElementById('wtValue');
     const footerContainer = document.getElementById('footerContainer');
-    
-    wtValueSpan.innerText = currentWaitTime.toFixed(1);
-    
-    if (currentWaitTime < 5) {
-        footerContainer.className = 'status-green';
-    } else if (currentWaitTime === 5) {
-        footerContainer.className = 'status-yellow';
-    } else {
-        footerContainer.className = 'status-red';
-    }
+
+    onSnapshot(doc(db, "settings", "waittime"), (docSnap) => {
+        if (docSnap.exists()) {
+            const time = docSnap.data().minutes;
+            wtValueSpan.innerText = time.toFixed(1);
+            
+            // Define a cor com base no banco de dados
+            if (time < 5) {
+                footerContainer.className = 'status-green';
+            } else if (time === 5) {
+                footerContainer.className = 'status-yellow';
+            } else {
+                footerContainer.className = 'status-red';
+            }
+        } else {
+            wtValueSpan.innerText = "0.0";
+            footerContainer.className = 'status-green';
+        }
+    });
 
     function activateAudioContext() {
         if (!audioCtx) {
@@ -119,7 +124,7 @@
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.4);
         } catch (e) {
-            console.log("Audio check:", e);
+            console.log("Audio trigger:", e);
         }
     }
 
@@ -136,7 +141,7 @@
                 window.speechSynthesis.speak(utterance);
             }
         } catch (e) {
-            console.error("TTS check error:", e);
+            console.error("TTS error:", e);
         }
     }
 
