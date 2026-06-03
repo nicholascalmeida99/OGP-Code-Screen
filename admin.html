@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OGP - Admin Panel</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: white; padding: 20px; text-align: center; }
+        .box { background-color: #333; padding: 30px; border-radius: 10px; max-width: 400px; margin: 40px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        h1 { color: #0071dc; margin-bottom: 20px; }
+        input { font-size: 2rem; width: 120px; text-align: center; padding: 10px; border-radius: 5px; border: 2px solid #0071dc; background: #222; color: white; font-weight: bold; }
+        button { display: block; width: 100%; margin-top: 20px; background-color: #ffc220; color: #333; font-size: 1.2rem; font-weight: bold; padding: 15px; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #e5af1d; }
+        .status { margin-top: 15px; font-size: 0.9rem; color: #2ecc71; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>Update Wait Time</h1>
+    <p>Digite os minutos atuais da loja:</p>
+    <input type="number" id="wtInput" step="0.1" min="0" value="4.5">
+    <button id="updateBtn">UPDATE TV SCREEN</button>
+    <div class="status" id="statusMsg">✔ Updated successfully on TV!</div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // ⚠️ COLOQUE SUAS CHAVES DO FIREBASE AQUI IGUAL AS DA TV
+    const firebaseConfig = {
+        apiKey: "AIzaSyAs7X8zV_v8N21x8vV_ExampleKeyOnly", 
+        authDomain: "walmart-ogp-code-screen.firebaseapp.com",
+        projectId: "walmart-ogp-code-screen",
+        storageBucket: "walmart-ogp-code-screen.appspot.com",
+        messagingSenderId: "123456789012",
+        appId: "1:123456789012:web:a1b2c3d4e5f6g7h8i9j0k"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Carrega o tempo atual ao abrir a página
+    async function loadCurrentTime() {
+        const docRef = doc(db, "settings", "waittime");
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            document.getElementById('wtInput').value = docSnap.data().minutes;
+        }
+    }
+    loadCurrentTime();
+
+    // Envia o novo tempo para o Firebase
+    document.getElementById('updateBtn').addEventListener('click', async () => {
+        const minutesValue = parseFloat(document.getElementById('wtInput').value);
+        if (isNaN(minutesValue)) return alert("Please enter a valid number");
+
+        try {
+            await setDoc(doc(db, "settings", "waittime"), {
+                minutes: minutesValue
+            });
+            
+            const msg = document.getElementById('statusMsg');
+            msg.style.display = 'block';
+            setTimeout(() => { msg.style.display = 'none'; }, 3000);
+        } catch (e) {
+            alert("Error updating: " + e.message);
+        }
+    });
+</script>
+</body>
+</html>
