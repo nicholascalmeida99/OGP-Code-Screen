@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel OGP - Chamadas</title>
+    <title>OGP Dashboard - Active Orders</title>
     <style>
         body { font-family: 'Arial Black', sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 20px; box-sizing: border-box; }
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #0071dc; padding-bottom: 10px; margin-bottom: 20px; }
@@ -20,7 +20,7 @@
 
 <header>
     <h1>Walmart <span class="logo-walmart">OGP</span> Pick-Up</h1>
-    <button class="btn-limpar" id="clearBtn">Limpar Painel</button>
+    <button class="btn-limpar" id="clearBtn">Clear Screen</button>
 </header>
 
 <div class="grid-pedidos" id="painelPedidos"></div>
@@ -29,7 +29,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, query, orderBy, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // ⚠️ COLOQUE AS SUAS CHAVES DO FIREBASE AQUI (Igual ao index.html)
+    // ⚠️ COLOQUE AS SUAS CHAVES DO FIREBASE AQUI
     const firebaseConfig = {
         apiKey: "SUA_API_KEY",
         authDomain: "SEU_AUTH_DOMAIN",
@@ -48,7 +48,7 @@
     onSnapshot(q, (snapshot) => {
         painelPedidos.innerHTML = "";
         if (snapshot.empty) {
-            painelPedidos.innerHTML = "<h2 style='color:#666; width:100%; text-align:center;'>Nenhum carro na vaga.</h2>";
+            painelPedidos.innerHTML = "<h2 style='color:#666; width:100%; text-align:center;'>No cars in bays currently.</h2>";
             return;
         }
         snapshot.forEach((doc) => {
@@ -61,7 +61,7 @@
     });
 
     document.getElementById('clearBtn').addEventListener('click', async () => {
-        if(confirm("Deseja limpar o painel?")) {
+        if(confirm("Do you want to clear all orders from the screen?")) {
             const querySnapshot = await getDocs(collection(db, "orders"));
             querySnapshot.forEach((documento) => { deleteDoc(doc(db, "orders", documento.id)); });
         }
