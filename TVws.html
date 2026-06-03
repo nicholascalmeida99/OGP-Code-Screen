@@ -52,7 +52,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, getDocs, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // Suas chaves oficiais do projeto walmart-ogp-code-screen
     const firebaseConfig = {
@@ -70,80 +70,17 @@
 
     let firstLoad = true; 
     let audioCtx = null;
-    let lastWaitTime = null; // Guarda o último tempo para saber quando ele realmente mudou
+    let lastWaitTime = null;
 
     const wtValueSpan = document.getElementById('wtValue');
     const footerContainer = document.getElementById('footerContainer');
 
-    // Função de som estilo "Surpresa/Sucesso" para o Wait Time
-    function playWaitTimeSound() {
-        try {
-            if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-
-            const now = audioCtx.currentTime;
-            
-            // Nota 1 (Mais baixa)
-            const osc1 = audioCtx.createOscillator();
-            const gain1 = audioCtx.createGain();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(523.25, now); // Nota C5
-            gain1.gain.setValueAtTime(0.08, now);
-            gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.15);
-            osc1.connect(gain1);
-            gain1.connect(audioCtx.destination);
-            osc1.start(now);
-            osc1.stop(now + 0.15);
-
-            // Nota 2 (Mais alta, tocada logo em seguida para o efeito surpresa)
-            const osc2 = audioCtx.createOscillator();
-            const gain2 = audioCtx.createGain();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(659.25, now + 0.1); // Nota E5
-            gain2.gain.setValueAtTime(0.08, now + 0.1);
-            gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.35);
-            osc2.connect(gain2);
-            gain2.connect(audioCtx.destination);
-            osc2.start(now + 0.1);
-            osc2.stop(now + 0.35);
-
-        } catch (e) {
-            console.log("Audio trigger error:", e);
-        }
-    }
-
-    // Função que dita os alertas de voz customizados do Wait Time
-    function speakWaitTimeUpdate(time) {
-        try {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Para qualquer som de vaga que esteja rolando
-                
-                let message = "";
-                if (time < 5) {
-                    message = `Wait time ${time.toFixed(1)}. Congratulations team, let's keep it!`;
-                } else if (time > 5) {
-                    message = `Wait time ${time.toFixed(1)}. Let's improve and get under 5!`;
-                } else {
-                    message = `Wait time ${time.toFixed(1)}. Right on the line, let's push it down!`;
-                }
-
-                const utterance = new SpeechSynthesisUtterance(message);
-                utterance.lang = 'en-US';
-                utterance.rate = 0.8; // Velocidade bem clara para o time entender
-                window.speechSynthesis.speak(utterance);
-            }
-        } catch (e) {
-            console.error("TTS Wait Time Error:", e);
-        }
-    }
-
-    // Escuta o Wait Time vindo do admin.html em tempo real
+    // Escuta o Wait Time em tempo real
     onSnapshot(doc(db, "settings", "waittime"), (docSnap) => {
         if (docSnap.exists()) {
             const time = docSnap.data().minutes;
             wtValueSpan.innerText = time.toFixed(1);
             
-            // Aplica as cores correspondentes
             if (time < 5) {
                 footerContainer.className = 'status-green';
             } else if (time === 5) {
@@ -152,19 +89,11 @@
                 footerContainer.className = 'status-red';
             }
 
-            // Se NÃO for a primeira carga da página e o tempo mudou de fato, aciona o som e a voz
             if (!firstLoad && lastWaitTime !== null && lastWaitTime !== time) {
                 playWaitTimeSound();
-                setTimeout(() => {
-                    speakWaitTimeUpdate(time);
-                }, 400);
+                setTimeout(() => { speakWaitTimeUpdate(time); }, 400);
             }
-            
-            lastWaitTime = time; // Atualiza o último estado salvo
-        } else {
-            wtValueSpan.innerText = "0.0";
-            footerContainer.className = 'status-green';
-            lastWaitTime = 0.0;
+            lastWaitTime = time;
         }
     });
 
@@ -178,45 +107,77 @@
     }
     document.body.addEventListener('click', activateAudioContext, { once: false });
 
-    // Som clássico de Beep para chegada de novos carros nas vagas
-    function playNotificationSound() {
+    function playWaitTimeSound() {
         try {
             if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc1 = audioCtx.createOscillator();
+            const gain1 = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(523.25, now);
+            gain1.gain.setValueAtTime(0.08, now);
+            gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.15);
+            osc1.connect(gain1); gain1.connect(audioCtx.destination);
+            osc1.start(now); osc1.stop(now + 0.15);
 
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(659.25, now + 0.1);
+            gain2.gain.setValueAtTime(0.08, now + 0.1);
+            gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.35);
+            osc2.connect(gain2); gain2.connect(audioCtx.destination);
+            osc2.start(now + 0.1); osc2.stop(now + 0.35);
+        } catch (e) {}
+    }
 
-            oscillator.type = 'sine'; 
-            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
-            
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4); 
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.4);
-        } catch (e) {
-            console.log("Audio trigger:", e);
+    function speakWaitTimeUpdate(time) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            let msg = time < 5 ? `Wait time ${time.toFixed(1)}. Congratulations team, let's keep it!` : `Wait time ${time.toFixed(1)}. Let's improve and get under 5!`;
+            if (time === 5) msg = `Wait time ${time.toFixed(1)}. Right on the line, let's push it down!`;
+            const utterance = new SpeechSynthesisUtterance(msg);
+            utterance.lang = 'en-US'; utterance.rate = 0.8;
+            window.speechSynthesis.speak(utterance);
         }
     }
 
-    function speakOrder(bay, code) {
+    function playNotificationSound() {
         try {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const spacedCode = code.split('').join(' ');
-                const textToSpeak = `Bay ${bay}. Code ${spacedCode}`;
-                
-                const utterance = new SpeechSynthesisUtterance(textToSpeak);
-                utterance.lang = 'en-US'; 
-                utterance.rate = 0.75; 
-                window.speechSynthesis.speak(utterance);
-            }
+            if (!audioCtx) return;
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4); 
+            oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+            oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.4);
+        } catch (e) {}
+    }
+
+    function speakOrder(bay, code) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const spacedCode = code.split('').join(' ');
+            const utterance = new SpeechSynthesisUtterance(`Bay ${bay}. Code ${spacedCode}`);
+            utterance.lang = 'en-US'; utterance.rate = 0.75; 
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // ⚡ NOVA FUNÇÃO: DELETA PEDIDOS ANTIGOS DA MESMA BAY PARA NÃO DUPLICAR
+    async function deleteOldOrdersForBay(bayNumber, currentDocId) {
+        try {
+            const qDocs = query(collection(db, "orders"), where("bay", "==", bayNumber));
+            const querySnapshot = await getDocs(qDocs);
+            querySnapshot.forEach(async (documento) => {
+                // Deleta se for a mesma bay mas com ID de documento diferente (ou seja, o antigo)
+                if (documento.id !== currentDocId) {
+                    await deleteDoc(doc(db, "orders", documento.id));
+                }
+            });
         } catch (e) {
-            console.error("TTS error:", e);
+            console.error("Erro ao limpar duplicata:", e);
         }
     }
 
@@ -224,11 +185,14 @@
     
     onSnapshot(q, (snapshot) => {
         if (!firstLoad && snapshot.docChanges().length > 0) {
-            // Só toca o aviso de vaga se a voz do Wait Time não estiver falando no momento para não encavalar
             if (!window.speechSynthesis.speaking) {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const newOrder = change.doc.data();
+                        
+                        // Executa a limpeza em segundo plano antes de soar o alarme
+                        deleteOldOrdersForBay(newOrder.bay, change.doc.id);
+
                         playNotificationSound();
                         setTimeout(() => {
                             speakOrder(newOrder.bay, newOrder.code);
