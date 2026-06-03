@@ -15,33 +15,24 @@
         .bay-num { font-size: 2.5rem; color: #fff; }
         .code-num { font-size: 2.5rem; color: #ffc220; }
         .btn-limpar { background: #ff4d4d; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; font-family: Arial, sans-serif; }
-        
-        /* Rodapé Centralizado com Linhas Laterais */
         footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1a1a1a; padding: 20px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
         .wait-time-container { display: flex; align-items: center; width: 100%; justify-content: center; }
         .wt-line { flex-grow: 1; height: 6px; border: none; margin: 0 20px; }
         .footer-wait-time { font-size: 1.8rem; font-weight: bold; text-transform: uppercase; white-space: nowrap; letter-spacing: 1px; }
-        
-        /* Cores dinâmicas para o Rodapé */
         .status-green { color: #2ecc71; }
         .status-green .wt-line { background-color: #2ecc71; }
-        
         .status-yellow { color: #ffc220; }
         .status-yellow .wt-line { background-color: #ffc220; }
-        
         .status-red { color: #e74c3c; }
         .status-red .wt-line { background-color: #e74c3c; }
     </style>
 </head>
 <body>
-
 <header>
     <h1><span class="text-blue">Walmart</span> - <span class="text-yellow">Dispensing Codes</span></h1>
     <button class="btn-limpar" id="clearBtn">Clear Screen</button>
 </header>
-
 <div class="grid-pedidos" id="painelPedidos"></div>
-
 <footer id="footerContainer">
     <div class="wait-time-container">
         <div class="wt-line"></div>
@@ -49,12 +40,10 @@
         <div class="wt-line"></div>
     </div>
 </footer>
-
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, onSnapshot, getDocs, deleteDoc, doc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // Suas chaves oficiais do projeto walmart-ogp-code-screen
     const firebaseConfig = {
         apiKey: "AIzaSyAs7X8zV_v8N21x8vV_ExampleKeyOnly", 
         authDomain: "walmart-ogp-code-screen.firebaseapp.com",
@@ -67,27 +56,19 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const painelPedidos = document.getElementById('painelPedidos');
-
     let firstLoad = true; 
     let audioCtx = null;
     let lastWaitTime = null;
-
     const wtValueSpan = document.getElementById('wtValue');
     const footerContainer = document.getElementById('footerContainer');
 
-    // Escuta o Wait Time em tempo real
     onSnapshot(doc(db, "settings", "waittime"), (docSnap) => {
         if (docSnap.exists()) {
             const time = docSnap.data().minutes;
             wtValueSpan.innerText = time.toFixed(1);
-            
-            if (time < 5) {
-                footerContainer.className = 'status-green';
-            } else if (time === 5) {
-                footerContainer.className = 'status-yellow';
-            } else {
-                footerContainer.className = 'status-red';
-            }
+            if (time < 5) footerContainer.className = 'status-green';
+            else if (time === 5) footerContainer.className = 'status-yellow';
+            else footerContainer.className = 'status-red';
 
             if (!firstLoad && lastWaitTime !== null && lastWaitTime !== time) {
                 playWaitTimeSound();
@@ -98,12 +79,8 @@
     });
 
     function activateAudioContext() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
     }
     document.body.addEventListener('click', activateAudioContext, { once: false });
 
@@ -111,23 +88,15 @@
         try {
             if (!audioCtx) return;
             const now = audioCtx.currentTime;
-            const osc1 = audioCtx.createOscillator();
-            const gain1 = audioCtx.createGain();
-            osc1.type = 'sine';
-            osc1.frequency.setValueAtTime(523.25, now);
-            gain1.gain.setValueAtTime(0.08, now);
-            gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.15);
-            osc1.connect(gain1); gain1.connect(audioCtx.destination);
-            osc1.start(now); osc1.stop(now + 0.15);
+            const osc1 = audioCtx.createOscillator(); const gain1 = audioCtx.createGain();
+            osc1.type = 'sine'; osc1.frequency.setValueAtTime(523.25, now);
+            gain1.gain.setValueAtTime(0.08, now); gain1.gain.exponentialRampToValueAtTime(0.00001, now + 0.15);
+            osc1.connect(gain1); gain1.connect(audioCtx.destination); osc1.start(now); osc1.stop(now + 0.15);
 
-            const osc2 = audioCtx.createOscillator();
-            const gain2 = audioCtx.createGain();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(659.25, now + 0.1);
-            gain2.gain.setValueAtTime(0.08, now + 0.1);
-            gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.35);
-            osc2.connect(gain2); gain2.connect(audioCtx.destination);
-            osc2.start(now + 0.1); osc2.stop(now + 0.35);
+            const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain();
+            osc2.type = 'sine'; osc2.frequency.setValueAtTime(659.25, now + 0.1);
+            gain2.gain.setValueAtTime(0.08, now + 0.1); gain2.gain.exponentialRampToValueAtTime(0.00001, now + 0.35);
+            osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.start(now + 0.1); osc2.stop(now + 0.35);
         } catch (e) {}
     }
 
@@ -137,21 +106,17 @@
             let msg = time < 5 ? `Wait time ${time.toFixed(1)}. Congratulations team, let's keep it!` : `Wait time ${time.toFixed(1)}. Let's improve and get under 5!`;
             if (time === 5) msg = `Wait time ${time.toFixed(1)}. Right on the line, let's push it down!`;
             const utterance = new SpeechSynthesisUtterance(msg);
-            utterance.lang = 'en-US'; utterance.rate = 0.8;
-            window.speechSynthesis.speak(utterance);
+            utterance.lang = 'en-US'; utterance.rate = 0.8; window.speechSynthesis.speak(utterance);
         }
     }
 
     function playNotificationSound() {
         try {
             if (!audioCtx) return;
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
+            const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
             oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4); 
-            oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
-            oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.4);
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4); 
+            oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.4);
         } catch (e) {}
     }
 
@@ -160,50 +125,24 @@
             window.speechSynthesis.cancel();
             const spacedCode = code.split('').join(' ');
             const utterance = new SpeechSynthesisUtterance(`Bay ${bay}. Code ${spacedCode}`);
-            utterance.lang = 'en-US'; utterance.rate = 0.75; 
-            window.speechSynthesis.speak(utterance);
-        }
-    }
-
-    // ⚡ NOVA FUNÇÃO: DELETA PEDIDOS ANTIGOS DA MESMA BAY PARA NÃO DUPLICAR
-    async function deleteOldOrdersForBay(bayNumber, currentDocId) {
-        try {
-            const qDocs = query(collection(db, "orders"), where("bay", "==", bayNumber));
-            const querySnapshot = await getDocs(qDocs);
-            querySnapshot.forEach(async (documento) => {
-                // Deleta se for a mesma bay mas com ID de documento diferente (ou seja, o antigo)
-                if (documento.id !== currentDocId) {
-                    await deleteDoc(doc(db, "orders", documento.id));
-                }
-            });
-        } catch (e) {
-            console.error("Erro ao limpar duplicata:", e);
+            utterance.lang = 'en-US'; utterance.rate = 0.75; window.speechSynthesis.speak(utterance);
         }
     }
 
     const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
-    
     onSnapshot(q, (snapshot) => {
         if (!firstLoad && snapshot.docChanges().length > 0) {
             if (!window.speechSynthesis.speaking) {
                 snapshot.docChanges().forEach((change) => {
                     if (change.type === "added") {
                         const newOrder = change.doc.data();
-                        
-                        // Executa a limpeza em segundo plano antes de soar o alarme
-                        deleteOldOrdersForBay(newOrder.bay, change.doc.id);
-
                         playNotificationSound();
-                        setTimeout(() => {
-                            speakOrder(newOrder.bay, newOrder.code);
-                        }, 450); 
+                        setTimeout(() => { speakOrder(newOrder.bay, newOrder.code); }, 450); 
                     }
                 });
             }
         }
-
-        if (firstLoad) { firstLoad = false; }
-
+        if (firstLoad) firstLoad = false;
         painelPedidos.innerHTML = "";
         if (snapshot.empty) {
             painelPedidos.innerHTML = "<h2 style='color:#666; width:100%; text-align:center;'>No cars in bays currently.</h2>";
@@ -211,8 +150,7 @@
         }
         snapshot.forEach((doc) => {
             const data = doc.data();
-            const card = document.createElement('div');
-            card.className = 'card-pedido';
+            const card = document.createElement('div'); card.className = 'card-pedido';
             card.innerHTML = `<div class="bay-num">BAY ${data.bay}</div><div class="code-num">#${data.code}</div>`;
             painelPedidos.appendChild(card);
         });
