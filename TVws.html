@@ -5,29 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OGP Dashboard - Active Orders</title>
     <style>
-        body { font-family: 'Arial Black', sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 20px; box-sizing: border-box; }
+        body { font-family: 'Arial Black', sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 20px; box-sizing: border-box; padding-bottom: 70px; }
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #0071dc; padding-bottom: 10px; margin-bottom: 20px; }
-        header h1 { margin: 0; color: #0071dc; font-size: 2.5rem; text-transform: uppercase; }
-        .logo-walmart { color: #ffc220; }
+        header h1 { margin: 0; font-size: 2.5rem; text-transform: uppercase; }
+        .text-blue { color: #0071dc; }
+        .text-yellow { color: #ffc220; }
         .grid-pedidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
         .card-pedido { background-color: #333; border-left: 15px solid #ffc220; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .bay-num { font-size: 2.5rem; color: #fff; }
         .code-num { font-size: 2.5rem; color: #ffc220; }
         .btn-limpar { background: #ff4d4d; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; font-family: Arial, sans-serif; }
+        
+        /* Estilo do Rodapé */
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #222; border-top: 3px solid #444; padding: 10px 20px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; }
+        .footer-instruction { font-family: Arial, sans-serif; font-size: 0.95rem; color: #ff4d4d; font-weight: bold; max-width: 70%; }
+        .footer-wait-time { font-size: 1.3rem; font-weight: bold; text-transform: uppercase; padding-right: 40px; }
+        
+        /* Cores dinâmicas do Wait Time */
+        .wt-green { color: #2ecc71; }
+        .wt-yellow { color: #ffc220; }
+        .wt-red { color: #e74c3c; }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Walmart <span class="logo-walmart">OGP</span> Pick-Up</h1>
+    <h1><span class="text-blue">Walmart</span> - <span class="text-yellow">Dispensing Codes</span></h1>
     <button class="btn-limpar" id="clearBtn">Clear Screen</button>
 </header>
 
 <div class="grid-pedidos" id="painelPedidos"></div>
 
+<footer>
+    <div class="footer-instruction">Utilizar o código assim que a ordem estiver preparada e realizar o dispense para agilizar no wait time.</div>
+    <div class="footer-wait-time" id="waitTimeDisplay">Wait Time: <span id="wtValue">0.0</span> mins</div>
+</footer>
+
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, query, orderBy, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 🔴 APENAS EDITE O NÚMERO ABAIXO PARA MUDAR O WAIT TIME NA TELA
+    const currentWaitTime = 4.5; 
 
     // Suas chaves oficiais do projeto walmart-ogp-code-screen
     const firebaseConfig = {
@@ -46,7 +65,17 @@
     let firstLoad = true; 
     let audioCtx = null;
 
-    // Ativa o áudio silenciosamente ao clicar em QUALQUER lugar da página
+    // Lógica para renderizar o Wait Time com a cor correta automaticamente
+    const wtValueSpan = document.getElementById('wtValue');
+    wtValueSpan.innerText = currentWaitTime.toFixed(1);
+    if (currentWaitTime < 5) {
+        wtValueSpan.className = 'wt-green';
+    } else if (currentWaitTime === 5) {
+        wtValueSpan.className = 'wt-yellow';
+    } else {
+        wtValueSpan.className = 'wt-red';
+    }
+
     function activateAudioContext() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -55,11 +84,8 @@
             audioCtx.resume();
         }
     }
-
-    // Monitora cliques na tela inteira para liberar o som de forma invisível
     document.body.addEventListener('click', activateAudioContext, { once: false });
 
-    // Função que gera o Beep eletrônico (PIN)
     function playNotificationSound() {
         try {
             if (!audioCtx) return;
@@ -80,23 +106,20 @@
             oscillator.start();
             oscillator.stop(audioCtx.currentTime + 0.4);
         } catch (e) {
-            console.log("Audio contexts blocked by browser security.", e);
+            console.log("Audio blocking check:", e);
         }
     }
 
-    // Função que dita a vaga e o código de forma pausada (Voz mais lenta)
     function speakOrder(bay, code) {
         try {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Limpa a fila de falas anteriores
-                
+                window.speechSynthesis.cancel();
                 const spacedCode = code.split('').join(' ');
                 const textToSpeak = `Bay ${bay}. Code ${spacedCode}`;
                 
                 const utterance = new SpeechSynthesisUtterance(textToSpeak);
                 utterance.lang = 'en-US'; 
-                utterance.rate = 0.75; // 0.75 deixa a fala mais calma e clara que o padrão (que é 1.0)
-                
+                utterance.rate = 0.75; 
                 window.speechSynthesis.speak(utterance);
             }
         } catch (e) {
@@ -111,7 +134,6 @@
             snapshot.docChanges().forEach((change) => {
                 if (change.type === "added") {
                     const newOrder = change.doc.data();
-                    
                     playNotificationSound();
                     setTimeout(() => {
                         speakOrder(newOrder.bay, newOrder.code);
