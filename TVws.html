@@ -14,11 +14,9 @@
         .bay-num { font-size: 2.5rem; color: #fff; }
         .code-num { font-size: 2.5rem; color: #ffc220; }
         .btn-limpar { background: #ff4d4d; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; font-family: Arial, sans-serif; }
-        .audio-banner { background-color: #ffc220; color: #333; padding: 10px; text-align: center; font-weight: bold; margin-bottom: 15px; border-radius: 5px; cursor: pointer; display: block; }
     </style>
 </head>
 <body>
-
 
 <header>
     <h1>Walmart <span class="logo-walmart">OGP</span> Pick-Up</h1>
@@ -31,6 +29,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, query, orderBy, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
+    // Suas chaves oficiais do projeto walmart-ogp-code-screen
     const firebaseConfig = {
         apiKey: "AIzaSyAs7X8zV_v8N21x8vV_ExampleKeyOnly", 
         authDomain: "walmart-ogp-code-screen.firebaseapp.com",
@@ -47,23 +46,20 @@
     let firstLoad = true; 
     let audioCtx = null;
 
-    // Inicializa o contexto de áudio do Mac após o clique do usuário
-    function initAudio() {
+    // Ativa o áudio silenciosamente ao clicar em QUALQUER lugar da página
+    function activateAudioContext() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
         if (audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
-        // Esconde o aviso amarelo de áudio
-        document.getElementById('audioAuthBanner').style.display = 'none';
     }
 
-    // Escuta cliques no banner ou em qualquer lugar do corpo do site para destravar o som
-    document.getElementById('audioAuthBanner').addEventListener('click', initAudio);
-    document.body.addEventListener('click', initAudio, { once: false });
+    // Monitora cliques na tela inteira para liberar o som de forma invisível
+    document.body.addEventListener('click', activateAudioContext, { once: false });
 
-    // Função para tocar o Beep (PIN) compatível com macOS
+    // Função que gera o Beep eletrônico (PIN)
     function playNotificationSound() {
         try {
             if (!audioCtx) return;
@@ -88,17 +84,19 @@
         }
     }
 
-    // Função que dita os comandos em inglês americano
+    // Função que dita a vaga e o código de forma pausada (Voz mais lenta)
     function speakOrder(bay, code) {
         try {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // Cancela falas anteriores presas no buffer
+                window.speechSynthesis.cancel(); // Limpa a fila de falas anteriores
+                
                 const spacedCode = code.split('').join(' ');
                 const textToSpeak = `Bay ${bay}. Code ${spacedCode}`;
                 
                 const utterance = new SpeechSynthesisUtterance(textToSpeak);
                 utterance.lang = 'en-US'; 
-                utterance.rate = 0.9;     
+                utterance.rate = 0.75; // 0.75 deixa a fala mais calma e clara que o padrão (que é 1.0)
+                
                 window.speechSynthesis.speak(utterance);
             }
         } catch (e) {
@@ -114,7 +112,6 @@
                 if (change.type === "added") {
                     const newOrder = change.doc.data();
                     
-                    // Executa o PIN e a voz sequencialmente
                     playNotificationSound();
                     setTimeout(() => {
                         speakOrder(newOrder.bay, newOrder.code);
