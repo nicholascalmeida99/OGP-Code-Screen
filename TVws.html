@@ -3,185 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OGP Dashboard - Active Orders</title>
+    <title>Walmart OGP - Main Hub</title>
     <style>
-        body { font-family: 'Arial Black', sans-serif; background-color: #1a1a1a; color: white; margin: 0; padding: 20px; box-sizing: border-box; padding-bottom: 90px; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #0071dc; padding-bottom: 10px; margin-bottom: 20px; }
-        header h1 { margin: 0; font-size: 2.5rem; text-transform: uppercase; }
+        body {
+            font-family: 'Arial Black', sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        header {
+            background-color: #1a1a1a;
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 4px solid #0071dc;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+        }
         .text-blue { color: #0071dc; }
         .text-yellow { color: #ffc220; }
-        .grid-pedidos { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
-        .card-pedido { background-color: #333; border-left: 15px solid #ffc220; padding: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .bay-num { font-size: 2.5rem; color: #fff; }
-        .code-num { font-size: 2.5rem; color: #ffc220; }
-        .btn-limpar { background: #ff4d4d; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; font-family: Arial, sans-serif; }
         
-        /* Rodapé Centralizado com Linhas Laterais */
-        footer { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1a1a1a; padding: 20px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
-        .wait-time-container { display: flex; align-items: center; width: 100%; justify-content: center; }
-        .wt-line { flex-grow: 1; height: 6px; border: none; margin: 0 20px; }
-        .footer-wait-time { font-size: 1.8rem; font-weight: bold; text-transform: uppercase; white-space: nowrap; letter-spacing: 1px; }
-        
-        /* Cores dinâmicas para o Rodapé */
-        .status-green { color: #2ecc71; }
-        .status-green .wt-line { background-color: #2ecc71; }
-        
-        .status-yellow { color: #ffc220; }
-        .status-yellow .wt-line { background-color: #ffc220; }
-        
-        .status-red { color: #e74c3c; }
-        .status-red .wt-line { background-color: #e74c3c; }
+        .container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            gap: 25px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .p-desc {
+            font-family: Arial, sans-serif;
+            color: #aaa;
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .hub-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 25px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .hub-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+        }
+        .btn-tv {
+            background-color: #0071dc;
+            color: white;
+            border: 3px solid #0056a8;
+        }
+        .btn-input {
+            background-color: #ffc220;
+            color: #333;
+            border: 3px solid #e5af1d;
+        }
+        .btn-admin {
+            background-color: #333;
+            color: #ffc220;
+            border: 3px solid #ffc220;
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <h1><span class="text-blue">Walmart</span> - <span class="text-yellow">Dispensing Codes</span></h1>
-    <button class="btn-limpar" id="clearBtn">Clear Screen</button>
+    <h1><span class="text-blue">Walmart</span> - <span class="text-yellow">OGP Portal</span></h1>
 </header>
 
-<div class="grid-pedidos" id="painelPedidos"></div>
+<div class="container">
+    <p class="p-desc">Selecione a ferramenta que deseja acessar:</p>
 
-<footer id="footerContainer">
-    <div class="wait-time-container">
-        <div class="wt-line"></div>
-        <div class="footer-wait-time">Wait Time: <span id="wtValue">--</span> mins</div>
-        <div class="wt-line"></div>
-    </div>
-</footer>
+    <!-- Corrigido aqui para apontar para TVws.html -->
+    <a href="TVws.html" class="hub-btn btn-tv">📺 Dispensing Screen (TV)</a>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, query, orderBy, onSnapshot, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <a href="index.html" class="hub-btn btn-input">🚗 Send Code (Bay Input)</a>
 
-    // Suas chaves oficiais do projeto walmart-ogp-code-screen
-    const firebaseConfig = {
-        apiKey: "AIzaSyAs7X8zV_v8N21x8vV_ExampleKeyOnly", 
-        authDomain: "walmart-ogp-code-screen.firebaseapp.com",
-        projectId: "walmart-ogp-code-screen",
-        storageBucket: "walmart-ogp-code-screen.appspot.com",
-        messagingSenderId: "123456789012",
-        appId: "1:123456789012:web:a1b2c3d4e5f6g7h8i9j0k"
-    };
+    <a href="admin.html" class="hub-btn btn-admin">⚙️ Update Wait Time</a>
+</div>
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const painelPedidos = document.getElementById('painelPedidos');
-
-    let firstLoad = true; 
-    let audioCtx = null;
-
-    // ESCUTADOR EM TEMPO REAL DO WAIT TIME 
-    const wtValueSpan = document.getElementById('wtValue');
-    const footerContainer = document.getElementById('footerContainer');
-
-    onSnapshot(doc(db, "settings", "waittime"), (docSnap) => {
-        if (docSnap.exists()) {
-            const time = docSnap.data().minutes;
-            wtValueSpan.innerText = time.toFixed(1);
-            
-            // Define a cor com base no banco de dados
-            if (time < 5) {
-                footerContainer.className = 'status-green';
-            } else if (time === 5) {
-                footerContainer.className = 'status-yellow';
-            } else {
-                footerContainer.className = 'status-red';
-            }
-        } else {
-            wtValueSpan.innerText = "0.0";
-            footerContainer.className = 'status-green';
-        }
-    });
-
-    function activateAudioContext() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-            audioCtx.resume();
-        }
-    }
-    document.body.addEventListener('click', activateAudioContext, { once: false });
-
-    function playNotificationSound() {
-        try {
-            if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
-
-            oscillator.type = 'sine'; 
-            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); 
-            
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.4); 
-
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.4);
-        } catch (e) {
-            console.log("Audio trigger:", e);
-        }
-    }
-
-    function speakOrder(bay, code) {
-        try {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const spacedCode = code.split('').join(' ');
-                const textToSpeak = `Bay ${bay}. Code ${spacedCode}`;
-                
-                const utterance = new SpeechSynthesisUtterance(textToSpeak);
-                utterance.lang = 'en-US'; 
-                utterance.rate = 0.75; 
-                window.speechSynthesis.speak(utterance);
-            }
-        } catch (e) {
-            console.error("TTS error:", e);
-        }
-    }
-
-    const q = query(collection(db, "orders"), orderBy("timestamp", "desc"));
-    
-    onSnapshot(q, (snapshot) => {
-        if (!firstLoad && snapshot.docChanges().length > 0) {
-            snapshot.docChanges().forEach((change) => {
-                if (change.type === "added") {
-                    const newOrder = change.doc.data();
-                    playNotificationSound();
-                    setTimeout(() => {
-                        speakOrder(newOrder.bay, newOrder.code);
-                    }, 450); 
-                }
-            });
-        }
-
-        if (firstLoad) { firstLoad = false; }
-
-        painelPedidos.innerHTML = "";
-        if (snapshot.empty) {
-            painelPedidos.innerHTML = "<h2 style='color:#666; width:100%; text-align:center;'>No cars in bays currently.</h2>";
-            return;
-        }
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            const card = document.createElement('div');
-            card.className = 'card-pedido';
-            card.innerHTML = `<div class="bay-num">BAY ${data.bay}</div><div class="code-num">#${data.code}</div>`;
-            painelPedidos.appendChild(card);
-        });
-    });
-
-    document.getElementById('clearBtn').addEventListener('click', async () => {
-        if(confirm("Do you want to clear all orders from the screen?")) {
-            const querySnapshot = await getDocs(collection(db, "orders"));
-            querySnapshot.forEach((documento) => { deleteDoc(doc(db, "orders", documento.id)); });
-        }
-    });
-</script>
 </body>
 </html>
