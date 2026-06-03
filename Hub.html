@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Walmart OGP - Main Hub</title>
+    <style>
+        body {
+            font-family: 'Arial Black', sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        header {
+            background-color: #1a1a1a;
+            text-align: center;
+            padding: 30px 20px;
+            border-bottom: 4px solid #0071dc;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+        }
+        .text-blue { color: #0071dc; }
+        .text-yellow { color: #ffc220; }
+        
+        .container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            gap: 25px;
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .p-desc {
+            font-family: Arial, sans-serif;
+            color: #aaa;
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .hub-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 25px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .hub-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+        }
+        /* Cores dos botões seguindo o padrão OGP */
+        .btn-tv {
+            background-color: #0071dc;
+            color: white;
+            border: 3px solid #0056a8;
+        }
+        .btn-input {
+            background-color: #ffc220;
+            color: #333;
+            border: 3px solid #e5af1d;
+        }
+        .btn-admin {
+            background-color: #333;
+            color: #ffc220;
+            border: 3px solid #ffc220;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1><span class="text-blue">Walmart</span> - <span class="text-yellow">OGP Portal</span></h1>
+</header>
+
+<div class="container">
+    <p class="p-desc">Selecione a ferramenta que deseja acessar:</p>
+
+    <!-- Opção 1: Tela do Dispensing (A TV da Loja) -->
+    <a href="tv.html" class="hub-btn btn-tv">📺 Dispensing Screen (TV)</a>
+
+    <!-- Opção 2: Tela de colocar a Bay (Aponta direto para o seu index.html atual) -->
+    <a href="index.html" class="hub-btn btn-input">🚗 Send Code (Bay Input)</a>
+
+    <!-- Opção 3: Tela de Update (Atualizar o Wait Time) -->
+    <a href="admin.html" class="hub-btn btn-admin">⚙️ Update Wait Time</a>
+</div>
+
+</body>
+</html>
